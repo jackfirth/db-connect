@@ -23,6 +23,6 @@ install:
   - raco pkg install --auto $TRAVIS_BUILD_DIR
 
 script:
-  - raco test -c db/connect
+  - raco test -p db-connect
   - raco doc-coverage db/connect
-  - raco cover -f codecov -d $TRAVIS_BUILD_DIR/coverage -c db/connect
+  - raco cover -f codecov -d $TRAVIS_BUILD_DIR/coverage -p db-connect
