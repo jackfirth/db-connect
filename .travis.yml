@@ -20,7 +20,7 @@ before_install:
   - raco pkg install --auto cover cover-codecov doc-coverage
 
 install:
-  - raco pkg install --auto db-connect
+  - raco pkg install --auto .
 
 script:
   - raco test -c db/connect
