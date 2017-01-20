@@ -3,7 +3,7 @@
 (define scribblings '(("scribblings/main.scrbl" () (library) "db-connect")))
 (define deps '("db-lib"
                "mock"
-               "base"))
+               ("base" #:version "6.5")))
 (define build-deps '("retry"
                      "db-doc"
                      "mock-rackunit"
