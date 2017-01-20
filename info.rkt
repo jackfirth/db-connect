@@ -1,7 +1,9 @@
 #lang info
 (define collection "db")
-(define deps '("base"))
 (define scribblings '(("scribblings/main.scrbl" () (library) "db-connect")))
+(define deps '("db-lib"
+               "mock"
+               "base"))
 (define build-deps '("retry"
                      "db-doc"
                      "mock-rackunit"
