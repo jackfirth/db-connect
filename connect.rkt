@@ -4,6 +4,21 @@
 
 (provide
  (contract-out
+  [mysql-config
+   (->* ()
+        (#:user string?
+         #:database (or/c string? #f)
+         #:server string?
+         #:port port-number?
+         #:password (or/c string? #f))
+        mysql-config?)]
+  [mysql-config? predicate/c]
+  [mysql-config-user (-> mysql-config? string?)]
+  [mysql-config-database (-> mysql-config? (or/c string? #f))]
+  [mysql-config-server (-> mysql-config? string?)]
+  [mysql-config-port (-> mysql-config? port-number?)]
+  [mysql-config-password (-> mysql-config? (or/c string? #f))]
+  [mysql-connect/config (-> mysql-config? connection?)]
   [postgresql-config
    (->* ()
         (#:user string?
