@@ -65,3 +65,50 @@ from specific "well-known" environment variables.
                                                      #:port 8257
                                                      #:password "hanshotfirst"))
               (new connection%)))}
+
+@defproc[(mysql-config [#:user user string? "mysql"]
+                       [#:database database (or/c string? #f) #f]
+                       [#:server server string? "localhost"]
+                       [#:port port port-number? 3306]
+                       [#:password password (or/c string? #f) #f])
+         mysql-config?]{
+ Constructs a configuration value that can be used to connect to a MySQL
+ database using @racket[mysql-connect/config]. Currently, connecting with
+ TLS is not supported. Unlike @racket[mysql-connect], @racket[user] defaults to
+ @racket["mysql"].
+ @(db-connect-examples
+   (mysql-config #:server "db.server.com" #:port 1234))}
+
+@defproc[(mysql-config? [v any/c]) boolean?]{
+ Returns true when @racket[v] is a MySQL connection configuration value
+ constructed by @racket[mysql-config].
+ @(db-connect-examples
+   (mysql-config? (mysql-config))
+   (mysql-config? "lethargic unicorn"))}
+
+@document-accessors[
+ (config mysql-config?
+         [mysql-config-user string?]
+         [mysql-config-database (or/c string? #f)]
+         [mysql-config-server string?]
+         [mysql-config-port port-number?]
+         [mysql-config-password (or/c string? #f)])]{
+ Accessors for each of the fields of MySQL connection configuration values. See
+ @racket[mysql-config] and @racket[mysql-connect/config] for details on how
+ these fields are used.
+ @(db-connect-examples
+   (mysql-config-port (mysql-config #:port 624)))}
+
+@defproc[(mysql-connect/config [config mysql-config?]) connection?]{
+ Like @racket[mysql-connect] from @racketmodname[db], but a connection is
+ established using the fields of the given @racket[config] object. Not all
+ features of @racket[mysql-connect] are supported; TLS connections cannot
+ be established, notification handlers cannot be registered, and connections
+ cannot be made over local sockets (see @local-sockets-secref[]).
+ @(db-connect-examples
+   (eval:alts (mysql-connect (mysql-config #:user "zoeytheadmin"
+                                           #:database "superdb"
+                                           #:server "db.zoey.com"
+                                           #:port 8257
+                                           #:password "hanshotfirst"))
+              (new connection%)))}
