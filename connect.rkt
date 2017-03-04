@@ -20,32 +20,42 @@
   [postgresql-config-password (-> postgresql-config? (or/c string? #f))]
   [postgresql-connect/config (-> postgresql-config? connection?)]))
 
-(require db
+(require (for-syntax racket/base)
+         db
          mock
-         racket/tcp)
+         racket/tcp
+         syntax/parse/define)
 
 (module+ test
   (require mock/rackunit
            rackunit))
 
 
-(struct postgresql-config
-  (user database server port password)
-  #:transparent
-  #:omit-define-syntaxes
-  #:constructor-name make-postgresql-config)
+(begin-for-syntax
+  (define (identifier->keyword id-stx)
+    (string->keyword (symbol->string (identifier-binding-symbol id-stx))))
+  (define-syntax-class kw-field
+    #:attributes ([kwarg-formals 1] id)
+    (pattern id:id
+             #:with id-kw (identifier->keyword #'id)
+             #:attr [kwarg-formals 1] (list #'id-kw #'id))
+    (pattern [id:id default:expr]
+             #:with id-kw (identifier->keyword #'id)
+             #:attr [kwarg-formals 1] (list #'id-kw #'[id default]))))
 
-(define (postgresql-config #:user [user "postgres"]
-                           #:database [database "public"]
-                           #:server [server "localhost"]
-                           #:port [port 5432]
-                           #:password [password #f])
-  (make-postgresql-config user database server port password))
+(define-simple-macro (struct/kw name:id (field:kw-field ...))
+  (begin
+    (struct name (field.id ...)
+      #:transparent #:omit-define-syntaxes #:constructor-name make)
+    (define (name field.kwarg-formals ... ...)
+      (make field.id ...))))
 
-(module+ test
-  (check-equal? (postgresql-config)
-                (make-postgresql-config
-                 "postgres" "public" "localhost" 5432 #f)))
+(struct/kw postgresql-config
+  ([user "postgres"]
+   [database "public"]
+   [server "localhost"]
+   [port 5432]
+   [password #f]))
 
 (define/mock (postgresql-connect/config config)
   #:opaque test-connection
@@ -58,16 +68,11 @@
 
 (module+ test
   (with-mocks postgresql-connect/config
-    (define test-config
-      (postgresql-config #:user "test-user"
-                         #:database "test-database"
-                         #:server "test.dns.address"
-                         #:port 1234
-                         #:password "testing password"))
-    (check-equal? (postgresql-connect/config test-config) test-connection)
+    (check-equal? (postgresql-connect/config (postgresql-config))
+                  test-connection)
     (check-mock-calls postgresql-connect
-                      (list (arguments #:user "test-user"
-                                       #:database "test-database"
-                                       #:server "test.dns.address"
-                                       #:port 1234
-                                       #:password "testing password")))))
+                      (list (arguments #:user "postgres"
+                                       #:database "public"
+                                       #:server "localhost"
+                                       #:port 5432
+                                       #:password #f)))))
