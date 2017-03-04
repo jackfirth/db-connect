@@ -76,3 +76,29 @@
                                        #:server "localhost"
                                        #:port 5432
                                        #:password #f)))))
+
+(struct/kw mysql-config
+  ([user "mysql"]
+   [database #f]
+   [server "localhost"]
+   [port 3306]
+   [password #f]))
+
+(define/mock (mysql-connect/config config)
+  #:opaque test-connection
+  #:mock mysql-connect #:with-behavior (const/kw test-connection)
+  (mysql-connect #:user (mysql-config-user config)
+                 #:database (mysql-config-database config)
+                 #:server (mysql-config-server config)
+                 #:port (mysql-config-port config)
+                 #:password (mysql-config-password config)))
+
+(module+ test
+  (with-mocks mysql-connect/config
+    (check-equal? (mysql-connect/config (mysql-config)) test-connection)
+    (check-mock-calls mysql-connect
+                      (list (arguments #:user "mysql"
+                                       #:database #f
+                                       #:server "localhost"
+                                       #:port 3306
+                                       #:password #f)))))
