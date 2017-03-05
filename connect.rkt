@@ -33,7 +33,20 @@
   [postgresql-config-server (-> postgresql-config? string?)]
   [postgresql-config-port (-> postgresql-config? port-number?)]
   [postgresql-config-password (-> postgresql-config? (or/c string? #f))]
-  [postgresql-connect/config (-> postgresql-config? connection?)]))
+  [postgresql-connect/config (-> postgresql-config? connection?)]
+  [sqlite3-config
+   (->* ()
+        (#:database (or/c path-string? 'memory 'temporary)
+         #:mode (or/c 'read-only 'read/write 'create)
+         #:use-place? boolean?)
+        sqlite3-config?)]
+  [sqlite3-config? predicate/c]
+  [sqlite3-config-database
+   (-> sqlite3-config? (or/c path-string? 'memory 'temporary))]
+  [sqlite3-config-mode
+   (-> sqlite3-config? (or/c 'read-only 'read/write 'create))]
+  [sqlite3-config-use-place? (-> sqlite3-config? boolean?)]
+  [sqlite3-connect/config (-> sqlite3-config? connection?)]))
 
 (require (for-syntax racket/base)
          db
