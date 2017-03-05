@@ -135,7 +135,9 @@
   #:mock sqlite3-connect #:with-behavior (const/kw test-connection)
   (sqlite3-connect #:database (sqlite3-config-database config)
                    #:mode (sqlite3-config-mode config)
-                   #:use-place (sqlite3-config-use-place? config)))
+                   #:use-place (sqlite3-config-use-place? config)
+                   #:busy-retry-limit 0
+                   #:busy-retry-delay 0))
 
 (module+ test
   (with-mocks sqlite3-connect/config
@@ -143,4 +145,6 @@
     (check-mock-calls sqlite3-connect
                       (list (arguments #:database 'temporary
                                        #:mode 'read/write
-                                       #:use-place #f)))))
+                                       #:use-place #f
+                                       #:busy-retry-limit 0
+                                       #:busy-retry-delay 0)))))
