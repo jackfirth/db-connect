@@ -112,3 +112,45 @@ from specific "well-known" environment variables.
                                            #:port 8257
                                            #:password "hanshotfirst"))
               (new connection%)))}
+
+@defproc[(sqlite3-config [#:database database
+                          (or/c path-string? 'memory 'temporary) 'memory]
+                         [#:mode mode (or/c 'read-only 'read/write 'create)
+                          'read/write]
+                         [#:use-place? use-place? boolean? #f])
+         sqlite3-config?]{
+ Constructs a configuration value that can be used to connect to a SQLite
+ database using @racket[sqlite3-connect/config]. Unlike
+ @racket[sqlite3-connect], @racket[database] defaults to @racket['memory].
+ @(db-connect-examples
+   (sqlite3-config #:database "/path/to/db.sqlite" #:mode 'read-only))}
+
+@defproc[(sqlite3-config? [v any/c]) boolean?]{
+ Returns true when @racket[v] is a SQLite connection configuration value
+ constructed by @racket[sqlite3-config].
+ @(db-connect-examples
+   (sqlite3-config? (sqlite3-config))
+   (sqlite3-config? "lethargic unicorn"))}
+
+@document-accessors[
+ (config sqlite3-config?
+         [sqlite3-config-database (or/c path-string? 'memory 'temporary)]
+         [sqlite3-config-mode (or/c 'read-only 'read/write 'create)]
+         [sqlite3-config-use-place? boolean?])]{
+ Accessors for each of the fields of sqlite connection configuration values. See
+ @racket[sqlite3-config] and @racket[sqlite3-connect/config] for details on how
+ these fields are used.
+ @(db-connect-examples
+   (sqlite3-config-mode (sqlite3-config #:mode 'create)))}
+
+@defproc[(sqlite3-connect/config [config sqlite3-config?]) connection?]{
+ Like @racket[sql3-connect] from @racketmodname[db], but a connection is
+ established using the fields of the given @racket[config] object. Unlike
+ @racket[sqlite3-connect], this procedure does not handle retries in the event
+ of a busy connection. All connections are single-attempt only, leading to a
+ high failure rate in the event of concurrent access.
+ @(db-connect-examples
+   (eval:alts (sqlite3-connect (sqlite3-config #:database "/data/mydb.sqlite"
+                                               #:mode 'read
+                                               #:use-place? #t))
+              (new connection%)))}
