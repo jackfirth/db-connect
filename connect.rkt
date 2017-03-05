@@ -33,7 +33,20 @@
   [postgresql-config-server (-> postgresql-config? string?)]
   [postgresql-config-port (-> postgresql-config? port-number?)]
   [postgresql-config-password (-> postgresql-config? (or/c string? #f))]
-  [postgresql-connect/config (-> postgresql-config? connection?)]))
+  [postgresql-connect/config (-> postgresql-config? connection?)]
+  [sqlite3-config
+   (->* ()
+        (#:database (or/c path-string? 'memory 'temporary)
+         #:mode (or/c 'read-only 'read/write 'create)
+         #:use-place? boolean?)
+        sqlite3-config?)]
+  [sqlite3-config? predicate/c]
+  [sqlite3-config-database
+   (-> sqlite3-config? (or/c path-string? 'memory 'temporary))]
+  [sqlite3-config-mode
+   (-> sqlite3-config? (or/c 'read-only 'read/write 'create))]
+  [sqlite3-config-use-place? (-> sqlite3-config? boolean?)]
+  [sqlite3-connect/config (-> sqlite3-config? connection?)]))
 
 (require (for-syntax racket/base)
          db
@@ -93,11 +106,7 @@
                                        #:password #f)))))
 
 (struct/kw mysql-config
-  ([user "mysql"]
-   [database #f]
-   [server "localhost"]
-   [port 3306]
-   [password #f]))
+  ([user "mysql"] [database #f] [server "localhost"] [port 3306] [password #f]))
 
 (define/mock (mysql-connect/config config)
   #:opaque test-connection
@@ -117,3 +126,25 @@
                                        #:server "localhost"
                                        #:port 3306
                                        #:password #f)))))
+
+(struct/kw sqlite3-config
+  ([database 'temporary] [mode 'read/write] [use-place? #f]))
+
+(define/mock (sqlite3-connect/config config)
+  #:opaque test-connection
+  #:mock sqlite3-connect #:with-behavior (const/kw test-connection)
+  (sqlite3-connect #:database (sqlite3-config-database config)
+                   #:mode (sqlite3-config-mode config)
+                   #:use-place (sqlite3-config-use-place? config)
+                   #:busy-retry-limit 0
+                   #:busy-retry-delay 0))
+
+(module+ test
+  (with-mocks sqlite3-connect/config
+    (check-equal? (sqlite3-connect/config (sqlite3-config)) test-connection)
+    (check-mock-calls sqlite3-connect
+                      (list (arguments #:database 'temporary
+                                       #:mode 'read/write
+                                       #:use-place #f
+                                       #:busy-retry-limit 0
+                                       #:busy-retry-delay 0)))))
